@@ -1,0 +1,74 @@
+About MNIST dataset - This is a dataset(here) of 60,000 28x28 grayscale image of 10 digits, along with a test set of 10,000 images.
+
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+
+import tensorflow.keras
+from keras.datasets import mnist # Fetching the dataset from a library 
+
+from keras.models import Sequential
+from keras.layers import Dense, Conv2D, MaxPool2D, Flatten  
+
+Loading the dataset
+
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+# getting the dimensions of the above 
+X_train.shape, y_train.shape, X_test.shape, y_test.shape
+
+Visualizing the dataset
+
+# defining a function which will display the image one by one 
+def plot_input_img(i):
+  plt.imshow(X_train[i], cmap = 'binary')
+  plt.title(y_train[i])
+  plt.show()
+
+for i in range(2):
+  plot_input_img(i) # calling the function
+  # We get the first two images
+
+Preprocess the data
+
+X_train = X_train.astype(np.float32)/255 # normalizing the image to [0,1] range
+X_test = X_test.astype(np.float32)/255
+
+X_train = np.expand_dims(X_train, -1) # reshaping / expanding the dimsension of the images to (28, 28, 1)
+X_test = np.expand_dims(X_test, -1)
+
+X_train.shape
+
+# One hot encoding the output vector
+y_train = keras.utils.to_categorical(y_train)
+y_test = keras.utils.to_categorical(y_test)
+
+Initializing Model
+
+model = Sequential()
+
+model.add(Conv2D(32, (3,3), input_shape = (28,28,1), activation = 'relu')) #Adding 32 filter Convulation layer
+model.add(MaxPool2D((2,2)))
+
+model.add(Conv2D(64, (3,3), activation = 'relu'))
+model.add(MaxPool2D((2,2)))
+
+model.add(Flatten())
+
+model.add(Dense(10, activation="softmax")) # Dense is used for classification
+
+model.summary()
+
+model.compile(optimizer = 'adam', loss = keras.losses.categorical_crossentropy, metrics=['accuracy'])
+
+# Callbacks 
+
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+
+# Early Stopping
+es = EarlyStopping(monitor = 'val_acc', min_delta=0.01, patience = 4, verbose = 1)
+
+# Model Check Point
+mc = ModelCheckpoint("./bestmodel.h5", monitor = "val_acc", verbose = 1, save_best_only=True)
+
+cb = [es, mc]
